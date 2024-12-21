@@ -11,11 +11,9 @@ npm install react-native-serialport-windows
 ## Usage
 
 ```js
-import { multiply } from 'react-native-serialport-windows';
+import { listPorts } from 'react-native-serialport-windows';
 
-// ...
-
-const result = multiply(3, 7);
+const availablePorts = await listPorts();
 ```
 
 ## Contributing

@@ -1,4 +1,4 @@
-# react-native-serialport-windows
+# [react-native-serialport-windows](https://www.npmjs.com/package/react-native-serialport-windows)
 
 Serial Communication for React Native Windows apps
 

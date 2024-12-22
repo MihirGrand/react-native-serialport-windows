@@ -17,13 +17,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '2'
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
       - name: Install node modules
         run: npm install
+
+      - name: Navigate to example folder
+        run: cd example
 
       - name: Run Windows x64 release build
         run: npx react-native run-windows --arch x64 --release --logging

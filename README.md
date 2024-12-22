@@ -33,8 +33,8 @@ const availablePorts = await listPorts();
 #### Open a port with the desired settings:
 
 ```js
-// Parameters: portName, baudRate, dataBits, stopBits, parity, flowControl
 await openPort('COM1', 9600, 8, 1, 0, 0);
+// Parameters: portName, baudRate, dataBits, stopBits, parity, flowControl
 ```
 
 ### 2. Write data
@@ -85,6 +85,19 @@ cd example
 
 npm run windows
 ```
+
+## Contributing
+
+```sh
+git checkout -b my-feature-branch
+
+git add .
+git commit -m "feat: New feature description"
+
+git push origin my-feature-branch
+```
+
+and create a PR!
 
 ## License
 

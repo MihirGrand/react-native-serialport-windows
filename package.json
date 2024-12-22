@@ -1,7 +1,7 @@
 {
   "name": "react-native-serialport-windows",
-  "version": "0.1.0",
-  "description": "Serial Communication for RNW",
+  "version": "1.0.0",
+  "description": "Serial Communication for React Native Windows",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
@@ -47,8 +47,9 @@
   },
   "keywords": [
     "react-native",
-    "ios",
-    "android"
+    "windows",
+    "serial",
+    "serialport"
   ],
   "repository": {
     "type": "git",

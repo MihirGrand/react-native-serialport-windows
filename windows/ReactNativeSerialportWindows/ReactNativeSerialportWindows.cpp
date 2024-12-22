@@ -3,6 +3,7 @@
 #include <SetupAPI.h>
 #include <initguid.h>
 #include <devguid.h>
+#include "SerialPort.h"
 #pragma comment(lib, "setupapi.lib")
 
 namespace winrt::ReactNativeSerialportWindows
@@ -12,16 +13,12 @@ void ReactNativeSerialportWindows::Initialize(React::ReactContext const &reactCo
   m_context = reactContext;
 }
 
-double ReactNativeSerialportWindows::multiply(double a, double b) noexcept {
-  return a * b;
-}
-
 void ReactNativeSerialportWindows::listPorts(React::ReactPromise<std::vector<std::string>> promise) noexcept {
     std::vector<std::string> portList;
     
     HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_PORTS, nullptr, nullptr, DIGCF_PRESENT);
     if (hDevInfo == INVALID_HANDLE_VALUE) {
-        promise.Reject("Failed to get device information set for ports.");
+        promise.Reject(React::ReactError{ "Error", "Failed to get device information set for ports." });
         return;
     }
 
@@ -55,76 +52,118 @@ void ReactNativeSerialportWindows::listPorts(React::ReactPromise<std::vector<std
     promise.Resolve(portList);
 }
 
-/*void ReactNativeSerialportWindows::openPort(std::string portName, double baudRate, double dataBits, double stopBits, double parity, double handshake, React::ReactPromise<std::string> promise) noexcept {
-  if (m_serialPortHandle != INVALID_HANDLE_VALUE) {
-    promise.Reject("Port already open.");
-    return;
-  }
+void ReactNativeSerialportWindows::openPort(std::string portName, double baudRate, 
+    double dataBits, double stopBits, double parity, double flowControl,
+    React::ReactPromise<std::string> &&promise) noexcept {
+    try {
+        OutputDebugStringA(("Opening port with params:\n"
+            "Port: " + portName + "\n"
+            "Baud: " + std::to_string(static_cast<int>(baudRate)) + "\n"
+            "Data: " + std::to_string(static_cast<int>(dataBits)) + "\n"
+            "Stop: " + std::to_string(static_cast<int>(stopBits)) + "\n"
+            "Parity: " + std::to_string(static_cast<int>(parity)) + "\n").c_str());
 
-  m_serialPortHandle = CreateFileA(
-      portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-  
-  if (m_serialPortHandle == INVALID_HANDLE_VALUE) {
-    promise.Reject("Failed to open serial port.");
-    return;
-  }
+        if (portName.find("\\\\.\\") != 0) {
+            portName = "\\\\.\\" + portName;
+        }
 
-  DCB dcbSerialParams = {0};
-  dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+        m_serialPort = std::make_unique<SerialPort>(portName);
+        
+        int winStopBits;
+        switch(static_cast<int>(stopBits)) {
+            case 1: winStopBits = ONESTOPBIT; break;
+            case 2: winStopBits = TWOSTOPBITS; break;
+            default: winStopBits = ONESTOPBIT;
+        }
 
-  if (!GetCommState(m_serialPortHandle, &dcbSerialParams)) {
-    promise.Reject("Failed to get current serial port state.");
-    return;
-  }
+        int winParity;
+        switch(static_cast<int>(parity)) {
+            case 0: winParity = NOPARITY; break;
+            case 1: winParity = ODDPARITY; break;
+            case 2: winParity = EVENPARITY; break;
+            default: winParity = NOPARITY;
+        }
 
-  dcbSerialParams.BaudRate = static_cast<DWORD>(baudRate); // Ensure correct casting
-  dcbSerialParams.ByteSize = static_cast<BYTE>(dataBits);  // Ensure correct casting
-  dcbSerialParams.StopBits = (stopBits == 1) ? ONESTOPBIT : TWOSTOPBITS;
-  dcbSerialParams.Parity = (parity == 0) ? NOPARITY : (parity == 1) ? ODDPARITY : EVENPARITY;
-  dcbSerialParams.fOutxCtsFlow = handshake == 1;
-  dcbSerialParams.fRtsControl = RTS_CONTROL_HANDSHAKE;
+        bool success = m_serialPort->open(
+            static_cast<int>(baudRate),
+            static_cast<SerialPort::DataBits>(dataBits),
+            static_cast<SerialPort::StopBits>(winStopBits),
+            static_cast<SerialPort::Parity>(winParity),
+            static_cast<SerialPort::FlowControl>(flowControl)
+        );
 
-  if (!SetCommState(m_serialPortHandle, &dcbSerialParams)) {
-    promise.Reject("Failed to set serial port configuration.");
-    return;
-  }
-
-  m_isReading = true;
-  m_readThread = std::thread(&ReactNativeSerialportWindows::startReading, this);
-
-  promise.Resolve("Port opened successfully.");
+        if (success) {
+            m_serialPort->setDataReceivedCallback([this](const std::vector<uint8_t>& data) {
+                OnDataReceived(data);
+            });
+            promise.Resolve("Port opened successfully");
+        } else {
+            DWORD error = GetLastError();
+            char errorMsg[256];
+            FormatMessageA(
+                FORMAT_MESSAGE_FROM_SYSTEM,
+                nullptr,
+                error,
+                0,
+                errorMsg,
+                sizeof(errorMsg),
+                nullptr
+            );
+            promise.Reject(React::ReactError{"Error", 
+                std::string("Failed to open port. Error ") + 
+                std::to_string(error) + ": " + errorMsg});
+        }
+    } catch (const std::exception& e) {
+        promise.Reject(React::ReactError{"Error", e.what()});
+    }
 }
 
-void ReactNativeSerialportWindows::startReading() {
-  while (m_isReading) {
-    DWORD bytesRead;
-    char buffer[1024] = {0};
-
-    if (ReadFile(m_serialPortHandle, buffer, sizeof(buffer), &bytesRead, nullptr)) {
-      if (bytesRead > 0) {
-        emitDataReceived(std::string(buffer, bytesRead));
-      }
+void ReactNativeSerialportWindows::closePort(React::ReactPromise<std::string> &&promise) noexcept {
+    if (m_serialPort) {
+        m_serialPort->close();
+        m_serialPort.reset();
+        promise.Resolve("Port closed successfully");
     } else {
-      break;
+        promise.Reject(React::ReactError{ "Error", "No port open" });
     }
-  }
 }
 
-void ReactNativeSerialportWindows::stopReading() {
-  m_isReading = false;
-  if (m_readThread.joinable()) {
-    m_readThread.join();
-  }
-}
-
-void ReactNativeSerialportWindows::onDataReceived(std::function<void(std::string)> const & callback) noexcept {
-    m_dataCallback = callback;
-}
-
-void ReactNativeSerialportWindows::emitDataReceived(std::string data) {
-    if (m_dataCallback) {
-        m_dataCallback(data);
+void ReactNativeSerialportWindows::write(std::vector<double> const& data, 
+    React::ReactPromise<bool> &&promise) noexcept {
+    if (!m_serialPort) {
+        promise.Reject("No port open");
+        return;
     }
-}*/
+
+    std::vector<uint8_t> byteData;
+    byteData.reserve(data.size());
+    for (const auto& value : data) {
+        byteData.push_back(static_cast<uint8_t>(value));
+    }
+
+    promise.Resolve(m_serialPort->write(byteData));
+}
+
+void ReactNativeSerialportWindows::OnDataReceived(const std::vector<uint8_t>& data) {
+    if (m_context) {
+        auto eventData = winrt::Microsoft::ReactNative::JSValueObject();
+        winrt::Microsoft::ReactNative::JSValueArray jsDataArray;
+        for (auto byte : data) {
+            jsDataArray.push_back(static_cast<int>(byte));
+        }
+
+        eventData["data"] = std::move(jsDataArray);
+
+        m_context.EmitJSEvent(L"RCTDeviceEventEmitter", L"SerialPortDataReceived", eventData);
+    }
+}
+
+void ReactNativeSerialportWindows::addListener(std::string eventType) noexcept {
+    // 
+}
+
+void ReactNativeSerialportWindows::removeListeners(double count) noexcept {
+    //
+}
 
 } // namespace winrt::ReactNativeSerialportWindows

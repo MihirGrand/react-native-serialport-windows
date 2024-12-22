@@ -1,6 +1,6 @@
 # react-native-serialport-windows
 
-Serial Communication for RNW
+Serial Communication for React Native Windows apps
 
 ## Installation
 
@@ -8,22 +8,84 @@ Serial Communication for RNW
 npm install react-native-serialport-windows
 ```
 
+```js
+import {
+  listPorts,
+  openPort,
+  closePort,
+  write,
+  eventEmitter,
+} from 'react-native-serialport-windows';
+```
+
 ## Usage
 
-```js
-import { listPorts } from 'react-native-serialport-windows';
+### 1. List available ports
 
+#### Retrieve a list of all available serial ports:
+
+```js
 const availablePorts = await listPorts();
 ```
 
-## Contributing
+### 1. Open a port
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+#### Open a port with the desired settings:
+
+```js
+// Parameters: portName, baudRate, dataBits, stopBits, parity, flowControl
+await openPort('COM1', 9600, 8, 1, 0, 0);
+```
+
+### 2. Write data
+
+#### Send data to the serial port. Data should be an array of byte values:
+
+```js
+const data = [0x48, 0x65, 0x6c, 0x6c, 0x6f]; // "Hello"
+await write(data);
+```
+
+### 3. Receive data
+
+#### Listen for incoming data using the eventEmitter:
+
+```js
+useEffect(() => {
+  const subscription = eventEmitter.addListener(
+    'SerialPortDataReceived',
+    ({ data }) => {
+      const text = String.fromCharCode(...data);
+      console.log('Received:', text);
+    }
+  );
+
+  return () => subscription.remove();
+}, []);
+```
+
+### 4. Close the port
+
+#### When finished, ensure the port is closed:
+
+```js
+await closePort();
+```
+
+## Example
+
+```sh
+git clone https://github.com/MihirGrand/react-native-serialport-windows.git
+
+cd react-native-serialport-windows
+
+npm install
+
+cd example
+
+npm run windows
+```
 
 ## License
 
 MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

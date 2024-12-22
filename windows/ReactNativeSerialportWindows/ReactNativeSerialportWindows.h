@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "resource.h"
+#include "SerialPort.h"
 
 #if __has_include("codegen/NativeSerialportWindowsDataTypes.g.h")
   #include "codegen/NativeSerialportWindowsDataTypes.g.h"
@@ -21,30 +22,31 @@ struct ReactNativeSerialportWindows
   REACT_INIT(Initialize)
   void Initialize(React::ReactContext const &reactContext) noexcept;
 
-  REACT_SYNC_METHOD(multiply)
-  double multiply(double a, double b) noexcept;
-
   REACT_METHOD(listPorts)
   void listPorts(React::ReactPromise<std::vector<std::string>> promise) noexcept;
 
-  /*REACT_METHOD(openPort)
-  void openPort(std::string portName, double baudRate, double dataBits, double stopBits, double parity, double handshake, React::ReactPromise<std::string> promise) noexcept;
+  REACT_METHOD(openPort)
+  void openPort(std::string portName, double baudRate, double dataBits, 
+                double stopBits, double parity, double flowControl,
+                React::ReactPromise<std::string> &&promise) noexcept;
 
-  REACT_METHOD(onDataReceived)
-  void onDataReceived(std::function<void(std::string)> const & callback) noexcept;
+  REACT_METHOD(closePort)
+  void closePort(React::ReactPromise<std::string> &&promise) noexcept;
 
+  REACT_METHOD(write)
+  void write(std::vector<double> const& data, React::ReactPromise<bool> &&promise) noexcept;
 
-  void emitDataReceived(std::string data);*/
+  REACT_METHOD(addListener)
+  void addListener(std::string eventType) noexcept;
+
+  REACT_METHOD(removeListeners)
+  void removeListeners(double count) noexcept;
+
+  void OnDataReceived(const std::vector<uint8_t>& data);
 
 private:
   React::ReactContext m_context;
-  /*HANDLE m_serialPortHandle = INVALID_HANDLE_VALUE;
-  bool m_isReading = false;
-  std::thread m_readThread;
-  std::function<void(std::string)> m_dataCallback;
-  
-  void startReading();
-  void stopReading();*/
+  std::unique_ptr<SerialPort> m_serialPort;
 };
 
 } // namespace winrt::ReactNativeSerialportWindows

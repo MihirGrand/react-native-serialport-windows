@@ -1,20 +1,19 @@
+import { NativeEventEmitter } from 'react-native';
 import SerialportWindows from './NativeSerialportWindows';
 
-export function multiply(a: number, b: number): number {
-  return SerialportWindows.multiply(a, b);
-}
+export const eventEmitter = new NativeEventEmitter(SerialportWindows);
 
 export function listPorts(): Promise<string[]> {
   return SerialportWindows.listPorts();
 }
 
-/*export function openPort(
+export function openPort(
   portName: string,
   baudRate: number,
   dataBits: number,
   stopBits: number,
   parity: number,
-  handshake: number
+  flowControl: number
 ): Promise<string> {
   return SerialportWindows.openPort(
     portName,
@@ -22,10 +21,14 @@ export function listPorts(): Promise<string[]> {
     dataBits,
     stopBits,
     parity,
-    handshake
+    flowControl
   );
 }
 
-export function onDataReceived(callback: (data: string) => void): void {
-  SerialportWindows.onDataReceived(callback);
-}*/
+export function closePort(): Promise<string> {
+  return SerialportWindows.closePort();
+}
+
+export function write(data: number[]): Promise<boolean> {
+  return SerialportWindows.write(data);
+}

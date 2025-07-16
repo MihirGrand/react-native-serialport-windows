@@ -90,12 +90,24 @@ void SerialPort::close() {
 }
 
 bool SerialPort::write(const std::vector<uint8_t>& data) {
-    if (!isOpen() || data.empty()) {
+    if (!isOpen()) {
+        OutputDebugStringA("SerialPort::write - port not open\n");
+        return false;
+    }
+    if (data.empty()) {
+        OutputDebugStringA("SerialPort::write - data empty\n");
         return false;
     }
 
     DWORD bytesWritten;
-    return WriteFile(m_handle, data.data(), static_cast<DWORD>(data.size()), &bytesWritten, nullptr) != 0;
+    BOOL result = WriteFile(m_handle, data.data(), static_cast<DWORD>(data.size()), &bytesWritten, nullptr);
+    if (!result) {
+        DWORD err = GetLastError();
+        OutputDebugStringA(("SerialPort::write - WriteFile failed with error code: " + std::to_string(err) + "\n").c_str());
+        return false;
+    }
+    OutputDebugStringA(("SerialPort::write - WriteFile succeeded, bytes written: " + std::to_string(bytesWritten) + "\n").c_str());
+    return true;
 }
 
 void SerialPort::setDataReceivedCallback(DataReceivedCallback callback) {

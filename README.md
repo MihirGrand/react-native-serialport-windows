@@ -85,6 +85,7 @@ cd example
 
 npm run windows
 ```
+![react-native-serialport-windows](https://github.com/user-attachments/assets/f5349528-211a-4d91-88d6-725ac754725f)
 
 ## Contributing
 

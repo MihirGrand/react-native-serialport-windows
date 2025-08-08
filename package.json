@@ -20,21 +20,11 @@
   "files": [
     "src",
     "lib",
-    "android",
-    "ios",
+    "windows",
     "cpp",
-    "*.podspec",
     "react-native.config.js",
-    "!ios/build",
-    "!android/build",
-    "!android/gradle",
-    "!android/gradlew",
-    "!android/gradlew.bat",
-    "!android/local.properties",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__",
-    "!**/.*"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "example": "yarn workspace react-native-serialport-windows-example",

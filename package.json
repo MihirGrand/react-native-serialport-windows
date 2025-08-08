@@ -1,6 +1,6 @@
 {
   "name": "react-native-serialport-windows",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serial Communication for React Native Windows",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",

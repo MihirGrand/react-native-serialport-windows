@@ -80,11 +80,13 @@ namespace winrt::ReactNativeSerialportWindows {
                     OnDataReceived(portName, data);
                     });
                 m_serialPorts[portName] = std::move(serialPort);
+                OutputDebugStringA(("Port opened successfully: " + portName + "\n").c_str());
                 promise.Resolve("Port opened successfully");
             }
             else {
                 DWORD error = GetLastError();
                 char errorMsg[256];
+                OutputDebugStringA(("Port opened successfully: " + portName + " Error: " + std::to_string(error) + ": " + errorMsg + "\n").c_str());
                 FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error, 0, errorMsg, sizeof(errorMsg), nullptr);
                 promise.Reject(React::ReactError{ "Error", "Failed to open port. Error " + std::to_string(error) + ": " + errorMsg });
             }

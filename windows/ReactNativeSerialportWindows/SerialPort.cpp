@@ -12,7 +12,25 @@ SerialPort::SerialPort(const std::string& portName)
 SerialPort::~SerialPort() {
     close();
 }
-
+void applyFlowControl(DCB& dcb, SerialPort::FlowControl flowControl) {
+    switch (flowControl) {
+        case SerialPort::FlowControl::None:
+            dcb.fOutxCtsFlow = FALSE;
+            dcb.fOutX = FALSE;
+            dcb.fInX = FALSE;
+            break;
+        case SerialPort::FlowControl::Software:
+            dcb.fOutxCtsFlow = FALSE;
+            dcb.fOutX = TRUE;
+            dcb.fInX = TRUE;
+            break;
+        case SerialPort::FlowControl::Hardware:
+            dcb.fOutxCtsFlow = TRUE;
+            dcb.fOutX = FALSE;
+            dcb.fInX = FALSE;
+            break;
+    }
+}
 bool SerialPort::open(int baudRate, SerialPort::DataBits dataBits, SerialPort::StopBits stopBits, 
                      SerialPort::Parity parity, SerialPort::FlowControl flowControl) {
     if (m_handle != INVALID_HANDLE_VALUE) {
@@ -43,23 +61,52 @@ bool SerialPort::open(int baudRate, SerialPort::DataBits dataBits, SerialPort::S
 
     dcb.BaudRate = baudRate;
     dcb.ByteSize = static_cast<BYTE>(dataBits);
-    dcb.StopBits = static_cast<BYTE>(stopBits);
+    // dcb.StopBits = static_cast<BYTE>(stopBits);
+    switch (stopBits) {
+        case StopBits::One: dcb.StopBits = ONESTOPBIT; break;
+        case StopBits::OnePointFive: dcb.StopBits = ONE5STOPBITS; break;
+        case StopBits::Two: dcb.StopBits = TWOSTOPBITS; break;
+    }
+//     BYTE winStopBits = 0; // default ONESTOPBIT
+// if (stopBits == 1) winStopBits = ONESTOPBIT;
+// else if (stopBits == 1.5) winStopBits = ONE5STOPBITS;
+// else if (stopBits == 2) winStopBits = TWOSTOPBITS;
+// dcb.StopBits = winStopBits;
+    applyFlowControl(dcb, flowControl);
+
     dcb.Parity = static_cast<BYTE>(parity);
 
     dcb.fBinary = TRUE;
     dcb.fParity = (parity != SerialPort::Parity::None);
-    dcb.fOutxCtsFlow = FALSE;
+    // dcb.fOutxCtsFlow = FALSE;
     dcb.fOutxDsrFlow = FALSE;
     dcb.fDtrControl = DTR_CONTROL_ENABLE;
     dcb.fDsrSensitivity = FALSE;
     dcb.fTXContinueOnXoff = TRUE;
-    dcb.fOutX = FALSE;
-    dcb.fInX = FALSE;
+    // dcb.fOutX = FALSE;
+    // dcb.fInX = FALSE;
     dcb.fErrorChar = FALSE;
     dcb.fRtsControl = RTS_CONTROL_ENABLE;
     dcb.fAbortOnError = FALSE;
 
+    std::ostringstream logStream;
+    logStream << "Configuring COM port " << m_portName << " with settings:\n";
+    logStream << "  BaudRate: " << dcb.BaudRate << "\n";
+    logStream << "  ByteSize: " << static_cast<int>(dcb.ByteSize) << "\n";
+    logStream << "  StopBits: " << static_cast<int>(dcb.StopBits) << "\n";
+    logStream << "  Parity: " << static_cast<int>(dcb.Parity) << "\n";
+    logStream << "  fOutxCtsFlow: " << dcb.fOutxCtsFlow << "\n";
+    logStream << "  fOutX: " << dcb.fOutX << "\n";
+    logStream << "  fInX: " << dcb.fInX << "\n";
+    logStream << "  fDtrControl: " << dcb.fDtrControl << "\n";
+    logStream << "  fRtsControl: " << dcb.fRtsControl << "\n";
+
+    std::string logStr = logStream.str();
+    OutputDebugStringA(logStr.c_str());
+
     if (!SetCommState(m_handle, &dcb)) {
+        DWORD err = GetLastError();
+        OutputDebugStringA(("SetCommState failed. Error code: " + std::to_string(err) + "\n").c_str());
         close();
         return false;
     }

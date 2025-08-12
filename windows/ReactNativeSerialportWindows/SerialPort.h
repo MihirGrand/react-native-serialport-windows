@@ -9,7 +9,7 @@
 class SerialPort {
 public:
     enum class DataBits { Five = 5, Six = 6, Seven = 7, Eight = 8 };
-    enum class StopBits { One = 0, OnePointFive = 1, Two = 2 };
+    enum class StopBits { One = 1, OnePointFive = 0, Two = 2 };
     enum class Parity { None = 0, Odd = 1, Even = 2 };
     enum class FlowControl { None = 0, Software = 1, Hardware = 2 };
 

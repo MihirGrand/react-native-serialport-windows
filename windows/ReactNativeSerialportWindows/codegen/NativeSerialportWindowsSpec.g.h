@@ -19,8 +19,8 @@ struct SerialportWindowsSpec : winrt::Microsoft::ReactNative::TurboModuleSpec {
   static constexpr auto methods = std::tuple{
       Method<void(Promise<std::vector<std::string>>) noexcept>{0, L"listPorts"},
       Method<void(std::string, double, double, double, double, double, Promise<std::string>) noexcept>{1, L"openPort"},
-      Method<void(Promise<std::string>) noexcept>{2, L"closePort"},
-      Method<void(std::vector<double>, Promise<bool>) noexcept>{3, L"write"},
+      Method<void(std::string, Promise<std::string>) noexcept>{2, L"closePort"},
+      Method<void(std::string, std::vector<double>, Promise<bool>) noexcept>{3, L"write"},
       Method<void(std::string) noexcept>{4, L"addListener"},
       Method<void(double) noexcept>{5, L"removeListeners"},
   };
@@ -42,13 +42,13 @@ struct SerialportWindowsSpec : winrt::Microsoft::ReactNative::TurboModuleSpec {
     REACT_SHOW_METHOD_SPEC_ERRORS(
           2,
           "closePort",
-          "    REACT_METHOD(closePort) void closePort(::React::ReactPromise<std::string> &&result) noexcept { /* implementation */ }\n"
-          "    REACT_METHOD(closePort) static void closePort(::React::ReactPromise<std::string> &&result) noexcept { /* implementation */ }\n");
+          "    REACT_METHOD(closePort) void closePort(std::string portName, ::React::ReactPromise<std::string> &&result) noexcept { /* implementation */ }\n"
+          "    REACT_METHOD(closePort) static void closePort(std::string portName, ::React::ReactPromise<std::string> &&result) noexcept { /* implementation */ }\n");
     REACT_SHOW_METHOD_SPEC_ERRORS(
           3,
           "write",
-          "    REACT_METHOD(write) void write(std::vector<double> const & data, ::React::ReactPromise<bool> &&result) noexcept { /* implementation */ }\n"
-          "    REACT_METHOD(write) static void write(std::vector<double> const & data, ::React::ReactPromise<bool> &&result) noexcept { /* implementation */ }\n");
+          "    REACT_METHOD(write) void write(std::string portName, std::vector<double> const & data, ::React::ReactPromise<bool> &&result) noexcept { /* implementation */ }\n"
+          "    REACT_METHOD(write) static void write(std::string portName, std::vector<double> const & data, ::React::ReactPromise<bool> &&result) noexcept { /* implementation */ }\n");
     REACT_SHOW_METHOD_SPEC_ERRORS(
           4,
           "addListener",

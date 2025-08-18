@@ -25,10 +25,10 @@ export function openPort(
   );
 }
 
-export function closePort(): Promise<string> {
-  return SerialportWindows.closePort();
+export function closePort(portName: string): Promise<string> {
+  return SerialportWindows.closePort(portName); // <-- updated
 }
 
-export function write(data: number[]): Promise<boolean> {
-  return SerialportWindows.write(data);
+export function write(portName: string, data: number[]): Promise<boolean> {
+  return SerialportWindows.write(portName, data); // <-- updated
 }

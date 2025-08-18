@@ -3,6 +3,7 @@ import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
   listPorts(): Promise<string[]>;
+
   openPort(
     portName: string,
     baudRate: number,
@@ -11,8 +12,11 @@ export interface Spec extends TurboModule {
     parity: number,
     flowControl: number
   ): Promise<string>;
-  closePort(): Promise<string>;
-  write(data: Array<number>): Promise<boolean>;
+
+  closePort(portName: string): Promise<string>; // <-- updated
+
+  write(portName: string, data: Array<number>): Promise<boolean>; // <-- updated
+
   addListener(eventType: string): void;
   removeListeners(count: number): void;
 }
